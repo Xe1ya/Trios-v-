@@ -12,9 +12,9 @@ st.set_page_config(page_title="Trios", page_icon="🔍", layout="centered")
 def fetch_google(query, api_key):
     try:
         genai.configure(api_key=api_key)
-        model = genai.GenerativeModel('gemini-2.5-flash')
+        model = genai.GenerativeModel('gemini-1.5-flash')
         response = model.generate_content(query)
-        return {"provider": "Google (Gemini 2.5 flash)", "text": response.text}
+        return {"provider": "Google (Gemini 1.5 flash)", "text": response.text}
     except Exception as e:
         return {"provider": "Google", "text": f"Error: {str(e)}"}
 
