@@ -12,11 +12,20 @@ st.set_page_config(page_title="Trios", page_icon="🔍", layout="centered")
 def fetch_google(query, api_key):
     try:
         genai.configure(api_key=api_key)
-        model = genai.GenerativeModel('gemini-1.5-flash')
+        
+        # 利用可能なモデルを自動取得
+        target_model = "gemini-2.0-flash"
+        for m in genai.list_models():
+            if 'generateContent' in m.supported_generation_methods:
+                target_model = m.name
+                break
+
+        model = genai.GenerativeModel(target_model)
         response = model.generate_content(query)
-        return {"provider": "Google (Gemini 1.5 flash)", "text": response.text}
+        return {"provider": "Google (Gemini)", "text": response.text}
     except Exception as e:
         return {"provider": "Google", "text": f"Error: {str(e)}"}
+
 
 def fetch_groq(query, api_key):
     try:
