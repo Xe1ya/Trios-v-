@@ -43,7 +43,7 @@ def fetch_cohere(query, api_key):
 # --- UI構築 ---
 
 def main():
-    st.title("🔍 Trios (無料3大AI版)")
+    st.title("Trios")
     
     with st.sidebar:
         st.header("⚙️ API Keys")
