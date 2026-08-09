@@ -14,7 +14,7 @@ def fetch_google(query, api_key):
         genai.configure(api_key=api_key)
         
         # 利用可能なモデルを自動取得
-        target_model = "gemini-3.5-flash"
+        target_model = "gemini-3.6-flash"
         for m in genai.list_models():
             if 'generateContent' in m.supported_generation_methods:
                 target_model = m.name
