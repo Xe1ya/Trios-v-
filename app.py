@@ -1,23 +1,18 @@
-import asyncio
-import time
+import concurrent.futures
 import streamlit as st
 import openai
 import anthropic
 import google.generativeai as genai
-import nest_asyncio
-
-# 非同期処理の準備
-nest_asyncio.apply()
 
 # ページ設定
 st.set_page_config(page_title="Trios", page_icon="🔍", layout="centered")
 
 # --- AI取得ロジック ---
 
-async def fetch_openai(query, api_key):
+def fetch_openai(query, api_key):
     try:
-        client = openai.AsyncOpenAI(api_key=api_key)
-        response = await client.chat.completions.create(
+        client = openai.OpenAI(api_key=api_key)
+        response = client.chat.completions.create(
             model="gpt-4o",
             messages=[{"role": "user", "content": query}]
         )
@@ -25,10 +20,10 @@ async def fetch_openai(query, api_key):
     except Exception as e:
         return {"provider": "OpenAI", "text": f"Error: {str(e)}"}
 
-async def fetch_anthropic(query, api_key):
+def fetch_anthropic(query, api_key):
     try:
-        client = anthropic.AsyncAnthropic(api_key=api_key)
-        message = await client.messages.create(
+        client = anthropic.Anthropic(api_key=api_key)
+        message = client.messages.create(
             model="claude-3-5-sonnet-20240620",
             max_tokens=1000,
             messages=[{"role": "user", "content": query}]
@@ -37,11 +32,11 @@ async def fetch_anthropic(query, api_key):
     except Exception as e:
         return {"provider": "Anthropic", "text": f"Error: {str(e)}"}
 
-async def fetch_google(query, api_key):
+def fetch_google(query, api_key):
     try:
         genai.configure(api_key=api_key)
         model = genai.GenerativeModel('gemini-1.5-pro')
-        response = await asyncio.to_thread(model.generate_content, query)
+        response = model.generate_content(query)
         return {"provider": "Google (Gemini 1.5 Pro)", "text": response.text}
     except Exception as e:
         return {"provider": "Google", "text": f"Error: {str(e)}"}
@@ -66,17 +61,25 @@ def main():
             
         with st.spinner("AIが回答を生成中..."):
             tasks = []
-            if o_key: tasks.append(fetch_openai(query, o_key))
-            if a_key: tasks.append(fetch_anthropic(query, a_key))
-            if g_key: tasks.append(fetch_google(query, g_key))
+            if o_key:
+                tasks.append((fetch_openai, (query, o_key)))
+            if a_key:
+                tasks.append((fetch_anthropic, (query, a_key)))
+            if g_key:
+                tasks.append((fetch_google, (query, g_key)))
             
-            results = asyncio.run(asyncio.gather(*tasks))
+            results = []
+            with concurrent.futures.ThreadPoolExecutor() as executor:
+                futures = [executor.submit(func, *args) for func, args in tasks]
+                for future in concurrent.futures.as_completed(futures):
+                    results.append(future.result())
             
-            # 結果表示
-            tabs = st.tabs([r["provider"] for r in results])
-            for tab, r in zip(tabs, results):
-                with tab:
-                    st.markdown(r["text"])
+            if results:
+                tabs = st.tabs([r["provider"] for r in results])
+                for tab, r in zip(tabs, results):
+                    with tab:
+                        st.markdown(r["text"])
 
 if __name__ == "__main__":
     main()
+
