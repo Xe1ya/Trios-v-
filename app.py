@@ -58,31 +58,36 @@ def main():
 
     query = st.text_input("検索クエリを入力")
     
-    if st.button("検索"):
-        if not (g_key or groq_key or cohere_key):
-            st.error("少なくとも1つのAPIキーを入力してください")
-            return
-            
-        with st.spinner("AIが回答を生成中..."):
-            tasks = []
-            if g_key:
-                tasks.append((fetch_google, (query, g_key)))
-            if groq_key:
-                tasks.append((fetch_groq, (query, groq_key)))
-            if cohere_key:
-                tasks.append((fetch_cohere, (query, cohere_key)))
-            
-            results = []
-            with concurrent.futures.ThreadPoolExecutor() as executor:
-                futures = [executor.submit(func, *args) for func, args in tasks]
-                for future in concurrent.futures.as_completed(futures):
-                    results.append(future.result())
-            
-            if results:
-                tabs = st.tabs([r["provider"] for r in results])
-                for tab, r in zip(tabs, results):
-                    with tab:
-                        st.markdown(r["text"])
+# 検索ボタンが押された時の処理
+if st.button("検索"):
+    results = []
+    
+    # 1. 各AIから回答を取得
+    if google_key:
+        results.append(fetch_google(query, google_key))
+    if groq_key:
+        results.append(fetch_groq(query, groq_key))
+    if cohere_key:
+        results.append(fetch_cohere(query, cohere_key))
+    
+    # 各AIの回答を表示
+    for res in results:
+        st.subheader(res["provider"])
+        st.write(res["text"])
+        st.divider()
 
-if __name__ == "__main__":
-    main()
+    # 2. 全部の回答が揃ったら「比較まとめ」を作成
+    if len(results) > 1:
+        st.header("📊 各AIの比較まとめ")
+        
+        # 各AIの回答を1つのテキストに整理
+        all_texts = "\n\n".join([f"【{r['provider']}の回答】\n{r['text']}" for r in results])
+        summary_prompt = f"以下の複数のAIの回答を比較し、共通点・違い・それぞれの特徴をわかりやすく要約してください。\n\n{all_texts}"
+        
+        # 最初に設定されているキーを使ってまとめを生成（例: Google）
+        if google_key:
+            summary = fetch_google(summary_prompt, google_key)
+            st.info(summary["text"])
+        elif groq_key:
+            summary = fetch_groq(summary_prompt, groq_key)
+            st.info(summary["text"])
