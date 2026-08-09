@@ -15,11 +15,7 @@ def fetch_google(query, api_key):
         
         # 利用可能なモデルを自動取得
         target_model = "gemini-3.6-flash"
-        for m in genai.list_models():
-            if 'generateContent' in m.supported_generation_methods:
-                target_model = m.name
-                break
-
+       
         model = genai.GenerativeModel(target_model)
         response = model.generate_content(query)
         return {"provider": "Google (Gemini)", "text": response.text}
