@@ -44,7 +44,7 @@ def fetch_google(query, api_key):
 # --- UI構築 ---
 
 def main():
-    st.title("🔍 Trios (AI版)")
+    st.title(" Trios ")
     
     with st.sidebar:
         st.header("⚙️ API Keys")
