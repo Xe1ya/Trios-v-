@@ -27,10 +27,10 @@ def fetch_groq(query, api_key):
     try:
         client = Groq(api_key=api_key)
         completion = client.chat.completions.create(
-            model="llama-3.1-70b-versatile",
+            model="llama-3.3-70b-versatile",
             messages=[{"role": "user", "content": query}]
         )
-        return {"provider": "Groq (Llama 3.1 70B)", "text": completion.choices[0].message.content}
+        return {"provider": "Groq (Llama 3.3 70B)", "text": completion.choices[0].message.content}
     except Exception as e:
         return {"provider": "Groq", "text": f"Error: {str(e)}"}
 
@@ -38,7 +38,7 @@ def fetch_cohere(query, api_key):
     try:
         co = cohere.ClientV2(api_key=api_key)
         response = co.chat(
-            model="command-r-plus",
+            model="command-r-plus-08-2024",
             messages=[{"role": "user", "content": query}]
         )
         return {"provider": "Cohere (Command R+)", "text": response.message.content[0].text}
