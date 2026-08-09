@@ -77,16 +77,14 @@ if st.button("検索"):
         st.divider()
 
     # 2. 全部の回答が揃ったら「比較まとめ」を作成
+    # 比較まとめの処理
     if len(results) > 1:
         st.header("📊 各AIの比較まとめ")
-        
-        # 各AIの回答を1つのテキストに整理
         all_texts = "\n\n".join([f"【{r['provider']}の回答】\n{r['text']}" for r in results])
         summary_prompt = f"以下の複数のAIの回答を比較し、共通点・違い・それぞれの特徴をわかりやすく要約してください。\n\n{all_texts}"
         
-        # 最初に設定されているキーを使ってまとめを生成（例: Google）
-        if google_key:
-            summary = fetch_google(summary_prompt, google_key)
+        if g_key:
+            summary = fetch_google(summary_prompt, g_key)
             st.info(summary["text"])
         elif groq_key:
             summary = fetch_groq(summary_prompt, groq_key)
